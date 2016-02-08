@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 import sys
 from scipy import linalg
 from pygadgetreader import *
+from movie import *
 
-tolerance = 1E-3
+tolerance = 1E-6
 snap = str(sys.argv[1])
 # Initial and final snapshot number
 i_n = int(sys.argv[2])
@@ -73,16 +74,14 @@ def Shape(XYZ, tol):
         old_s = new_s
         old_q = new_q
         I_test = RIT(XYZ, old_q, old_s)
-        print I_test
+        #print I_test
         eival, evec = linalg.eig(I_test)
         oeival = np.sort(eival)
         XYZ = np.dot(evec.T, XYZ)
-        la = oeival[2]
-        lb = oeival[1]
-        lc = oeival[0]
+        la, lb, lc = oeival[2], oeival[1], oeival[0]
         new_s = np.sqrt(lc/la)
         new_q = np.sqrt(lb/la)
-    return new_s, new_q
+    return new_s, new_q, XYZ
 
 # Function to make an ellipsoid  plot.
 def Ellipsoid(a, b, c):
@@ -93,10 +92,14 @@ def Ellipsoid(a, b, c):
     z = c * np.cos(np.arccos(theta))
     return x, y, z
 
-def projection(x, y, z):
+def projection(x, y, z, a, q, s):
     plt.figure(figsize=(17, 5))
     plt.subplot(1, 3, 1)
+    u = np.linspace(0, 2 * np.pi, 100)
+    xt = a*np.cos(u)
+    yt = a*q*np.sin(u)
     plt.scatter(x, y, s=1)
+    plt.plot(xt, yt, lw=2, c='r')
     #plt.xlim(-200, 200)
     #plt.ylim(-200, 200)
     plt.xlabel('$x$', fontsize=25)
@@ -106,11 +109,15 @@ def projection(x, y, z):
     plt.scatter(x, z, s=1)
     #plt.xlim(-200, 200)
     #plt.ylim(-200, 200)
+    yt2 = a*s*np.sin(u)
+    plt.plot(xt, yt2, lw=2, c='r')
     plt.xlabel('$x$', fontsize=25)
     plt.ylabel('$z$', fontsize=25)
 
     plt.subplot(1, 3, 3)
     plt.scatter(y, z, s=1)
+    xt2 = a*q*np.cos(u)
+    plt.plot(xt2, yt2, lw=2, c='r')
     #plt.xlim(-200, 200)
     #plt.ylim(-200, 200)
     plt.xlabel('$y$', fontsize=25)
@@ -152,18 +159,20 @@ for i in range(i_n, i_f + 1):
     Rmax = np.sqrt(x_mw**2 + y_mw**2 + z_mw**2)
     Rvir_cut = np.where(Rmax<261.0)[0]
     x_mw, y_mw, z_mw = x_mw[Rvir_cut], y_mw[Rvir_cut], z_mw[Rvir_cut]
-    Rmw = Rmw[Rvir_cut, :]
+    Rmw = Rmw[Rvir_cut,:]
     #x_lmc = positions[index_LMC[0],0]
     #y_lmc = positions[index_LMC[0],1]
     #z_lmc = positions[index_LMC[0],2]
 
     a = A(Rmw.T, 0, 0, 0)
-    s, q, = Shape(Rmw.T, tolerance)
-    print a, s, q
+    s, q, D = Shape(Rmw.T, tolerance)
+    #print np.shape(D)
+    #rint a, s, q
+    #rojection(D[0,:], D[1,:], D[2,:], a, q, s)
+    movie(D[0,:], D[1,:])
 
-
-
-xe, ye, ze = Ellipsoid(a, q*a, s*a)
-XYZe = one_tensor(xe, ye, ze)
+    
+#xe, ye, ze = Ellipsoid(a, q*a, s*a)
+#XYZe = one_tensor(xe, ye, ze)
 #XYZ_e_rot = np.dot(evec, XYZe)
-projection(XYZe[0,:], XYZe[1,:], XYZe[2,:])
+#projection(XYZe[0,:], XYZe[1,:], XYZe[2,:])
