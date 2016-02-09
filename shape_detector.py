@@ -32,6 +32,9 @@ path = '../LMC-MW/data/LMCMW/MW1LMC4/a1/'
 # Number of Snapshots
 N_snaps = (i_f - i_n) + 1
 
+S = np.zeros(N_snaps)
+Q = np.zeros(N_snaps)
+
 #This function returns the length of a, takes as the largest distance
 #from the CM to the Rvir?
 def A(V, x_cm, y_cm, z_cm):
@@ -126,6 +129,9 @@ def projection(x, y, z, a, q, s):
 
 time = np.zeros(N_snaps)
 
+f = open(snap + "shape.txt", "w")
+f.write("Q, S \n")
+
 for i in range(i_n, i_f + 1):
     if i<10:
         time[i-i_n] = readheader(path + snap + "_00" + str(i),'time')
@@ -165,13 +171,14 @@ for i in range(i_n, i_f + 1):
     #z_lmc = positions[index_LMC[0],2]
 
     a = A(Rmw.T, 0, 0, 0)
-    s, q, D = Shape(Rmw.T, tolerance)
+    S[i], Q[i], D = Shape(Rmw.T, tolerance)
+    f.write("%f \t %f \n"%(Q[i], S[i]))
     #print np.shape(D)
     #rint a, s, q
     #rojection(D[0,:], D[1,:], D[2,:], a, q, s)
-    movie(D[0,:], D[1,:])
+    #movie(D[0,:], D[1,:])
 
-    
+f.close()
 #xe, ye, ze = Ellipsoid(a, q*a, s*a)
 #XYZe = one_tensor(xe, ye, ze)
 #XYZ_e_rot = np.dot(evec, XYZe)
